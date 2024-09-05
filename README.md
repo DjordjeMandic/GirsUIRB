@@ -45,7 +45,11 @@ If you're having issues with upload via UART most likely is that you're running 
 - [ ] Implement autobaud
 - [ ] Add status when doing nothing
 - [ ] Add low battery indicator
-     
+
+## Some other projects with this board
+
+- [TV-B-Gone on steroids using Universal IR Blaster board](https://github.com/DjordjeMandic/Universal-IR-Blaster-TV-B-Gone)
+
 ## License
 
 This software project licensed under the GPL2 "or later" license, just as AGirs & Infrared4Arduino. For more info see [AGirs License](https://github.com/bengtmartensson/AGirs#license)
