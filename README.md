@@ -1,5 +1,10 @@
-# GirsUIRB (based on [AGirs](https://github.com/bengtmartensson/AGirs))
+# GirsUIRB (based on [AGirs](https://github.com/bengtmartensson/AGirs)) | [![Linktree](https://img.shields.io/badge/LinkTree-1de9b6?logo=linktree&logoColor=white)](https://linktr.ee/djordjemandic)
  This is Girs infrared server for the Arduino ported and modified to work nicely with Universal IR Blaster V0.2 board with few modifications and addons. [MiniCore](https://github.com/MCUdude/MiniCore/) hardware package is used. GirsUIRB is compatible with [IrScrutinizer](https://github.com/bengtmartensson/IrScrutinizer) and [LIRC](https://www.lirc.org/). Until Universal IR Blaster V0.2 gets better documentation more info about hardware can be found [here](https://github.com/DjordjeMandic/Universal-IR-Blaster-TV-B-Gone).
+### Block diagram of Universal IR Blaster V0.2
+
+ <img src="Photos/BlockDiagramWithParts.svg" alt="Universal IR Blaster V0.2 Block Diagram"> 
+ 
+### Actual PCBA
 
 ![Universal IR Blaster V0.2 without battery](Photos/UIRBV02board.jpeg)
 # Getting started
