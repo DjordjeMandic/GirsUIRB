@@ -27,6 +27,8 @@ this program. If not, see http://www.gnu.org/licenses/.
 #include <InfraredTypes.h>
 #include <UIRBcore.hpp>
 
+uirbcore::UIRB& uirb = uirbcore::UIRB::getInstance();
+
 // Conditional includes
 #ifdef ETHERNET
 #include <Ethernet.h>
@@ -157,6 +159,8 @@ bool reset = false;
 #define okString "OK"
 #define errorString "ERROR"
 #define timeoutString "."
+
+#define PROGNAME_WITH_LIB_VERSION PROGNAME " " VERSION " (UIRBcore " UIRB_CORE_LIB_VER_STR ")"
 
 /**
  * Allocated length (-1) for commands etc.
@@ -441,7 +445,9 @@ void setup() {
     Serial.flush();
     Serial.begin(selectedBaud);
 
-    Serial.println(F(PROGNAME " " VERSION " (UIRBcore " UIRB_CORE_LIB_VER_STR ")"));
+    Serial.println(F(PROGNAME_WITH_LIB_VERSION));
+    if (!uirb.begin())
+        Serial.println(F("UIRBcore init fail!"));
     Serial.setTimeout(SERIALTIMEOUT);
 
 #ifdef ETHERNET
@@ -463,7 +469,7 @@ void info(Stream& stream) {
     stream.print(F("Arduino Leonardo"));
 #elif defined(ARDUINO_AVR_UNO)
     stream.print(F("Arduino Uno"));
-#elif defined(UIRB_V02)
+#elif defined(UIRB_BOARD_V02)
     stream.print(F("Universal IR Blaster V0.2"));
 #else
     stream.print(F("Unknown"));
@@ -760,7 +766,7 @@ static bool processCommand(const char* cmd, StreamParser& parser) {
 #endif // RENDERER
 
         if (cmd[0] == 'v') { // version
-        stream.println(F(PROGNAME " " VERSION));
+        stream.println(F(PROGNAME_WITH_LIB_VERSION));
     } else {
         stream.println(F(errorString));
     }
