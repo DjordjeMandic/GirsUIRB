@@ -26,6 +26,7 @@ this program. If not, see http://www.gnu.org/licenses/.
 #include <EEPROM.h>
 #include <Wire.h>
 #include <InfraredTypes.h>
+#include <UIRBcore.hpp>
 
 // Conditional includes
 #ifdef ETHERNET
@@ -417,37 +418,31 @@ void setup() {
 
 #if ! defined(ETHERNET) | defined(SERIAL_DEBUG)
     // Use options switch to select baudrate
-    pinMode(SERIAL_9600BAUD_SEL_PIN, INPUT_PULLUP);
-    pinMode(SERIAL_19200BAUD_SEL_PIN, INPUT_PULLUP);
-    pinMode(SERIAL_250000BAUD_SEL_PIN, INPUT_PULLUP);
-
     unsigned long selectedBaud = SERIALBAUD;
 
     Serial.begin(selectedBaud);
 
-    while (!Serial)
-        ; // wait for serial port to connect. "Needed for Leonardo only"
+    // while (!Serial)
+    //     ; // wait for serial port to connect. "Needed for Leonardo only"
 
     // Use options switch to select baudrate        
-    if (digitalRead(SERIAL_9600BAUD_SEL_PIN) == SERIAL_9600BAUD_SEL_PIN_ACTIVE) 
-    {
-        selectedBaud = 9600;
+    const uint8_t buttonPins[] = {PIN_BUTTON_OPTION_1, PIN_BUTTON_OPTION_2, PIN_BUTTON_OPTION_3};
+    const unsigned long baudOptions[] = {OPTION_1_BAUD, OPTION_2_BAUD, OPTION_3_BAUD};
+
+    for (uint8_t i = 0; i < 3; i++) {
+        if (digitalRead(buttonPins[i]) == BUTTON_PIN_ACTIVE_STATE) {
+            selectedBaud = baudOptions[i];
+            break;
+        }
     }
-    else if (digitalRead(SERIAL_19200BAUD_SEL_PIN) == SERIAL_19200BAUD_SEL_PIN_ACTIVE) 
-    {   
-        selectedBaud = 19200;
-    }
-    else if (digitalRead(SERIAL_250000BAUD_SEL_PIN) == SERIAL_250000BAUD_SEL_PIN_ACTIVE) 
-    {
-        selectedBaud = 250000;
-    }
+    // Print selected baud rate
     Serial.print(F("BAUD:"));
     Serial.print(selectedBaud, DEC);
     Serial.println(F(":END"));
     Serial.flush();
     Serial.begin(selectedBaud);
 
-    Serial.println(F(PROGNAME " " VERSION));
+    Serial.println(F(PROGNAME " " VERSION " (UIRBcore " UIRB_CORE_LIB_VER_STR ")"));
     Serial.setTimeout(SERIALTIMEOUT);
 
 #ifdef ETHERNET
