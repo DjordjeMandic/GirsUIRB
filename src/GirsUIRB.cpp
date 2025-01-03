@@ -1,5 +1,6 @@
 /*
 Copyright (C) 2014,2015,2017 Bengt Martensson.
+Copyright (C) 2024,2025 Djordje Mandic.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,6 +24,8 @@ this program. If not, see http://www.gnu.org/licenses/.
 #include <avr/pgmspace.h>
 #include <avr/wdt.h>
 #include <EEPROM.h>
+#include <Wire.h>
+#include <InfraredTypes.h>
 
 // Conditional includes
 #ifdef ETHERNET
@@ -346,11 +349,13 @@ static void dumpRemote(Stream& stream, const char* name) {
 #endif
 
 void setup() {
+    /*
     double HardwareVersion = 0.0;
     EEPROM.get(INFO_HARDWARE_VERSION_ADDR, HardwareVersion);
     //if hardware version defined in software does not match hardware version stored in eeprom then do a WDT reset
     if(HardwareVersion != HARDWARE_VERSION_CMP) { wdt_enable(WDTO_2S); while(1); } // if hardware version does not match restart to prevent damage to hardware
     
+    */
     LedLcdManager::setupLedGroundPins();
     GirsUtils::setupReceivers();
     GirsUtils::setupSensors();
@@ -418,7 +423,7 @@ void setup() {
 
     unsigned long selectedBaud = SERIALBAUD;
 
-    Serial.begin(SERIALBAUD);
+    Serial.begin(selectedBaud);
 
     while (!Serial)
         ; // wait for serial port to connect. "Needed for Leonardo only"
