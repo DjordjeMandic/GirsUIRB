@@ -23,7 +23,6 @@ this program. If not, see http://www.gnu.org/licenses/.
 #include "GirsLib/StreamParser.h"
 #include <avr/pgmspace.h>
 #include <avr/wdt.h>
-#include <EEPROM.h>
 #include <Wire.h>
 #include <InfraredTypes.h>
 #include <UIRBcore.hpp>
