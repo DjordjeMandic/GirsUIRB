@@ -477,6 +477,54 @@ void info(Stream& stream) {
 
     stream.print(F(", CPU frequency: "  EXPAND_AND_QUOTE(F_CPU)));
 
+    if (uirb.begin() == uirbcore::CoreResult::SUCCESS) {
+        stream.print(F(", Serial: '"));
+        stream.print(uirb.getUSBSerialNumber());
+        stream.print(F("', Boot count: "));
+        stream.print(uirb.getBootCount());
+        stream.print(F(", Reference: "));
+        stream.print(uirb.getInternalBandgapReferenceVoltageMilivolts());
+        stream.print(F("mV, Power: "));
+        uirbcore::PowerInfoData& powerInfo = uirb.getPowerInfo();
+        if (powerInfo.isValid()) { 
+            stream.print(F("Vcc="));
+            stream.print(powerInfo.getSupplyVoltage(), 3);
+            stream.print(F("V ; "));
+            stream.print(F("Ichg="));
+            stream.print(powerInfo.getChargingCurrent(), 3);
+            stream.print(F("A ; "));
+            stream.print(F("Vprog="));
+            stream.print(powerInfo.getProgVoltage(), 3);
+            stream.print(F("V ; "));
+            stream.print(F("Chg["));
+            switch (powerInfo.getChargerState()) {
+                case uirbcore::ChargerState::UNKNOWN:
+                    stream.print(F("unknown"));
+                    break;
+                case uirbcore::ChargerState::CHARGING_CC:
+                    stream.print(F("CC"));
+                    break;
+                case uirbcore::ChargerState::CHARGING_CV:
+                    stream.print(F("CV"));
+                    break;
+                case uirbcore::ChargerState::FLOATING:
+                    stream.print(F("float"));
+                    break;
+                case uirbcore::ChargerState::TURNED_OFF:
+                    stream.print(F("off"));
+                    break;
+                default:
+                    stream.print(F("error"));
+                    break;
+            }
+            stream.print(F("] "));
+            #todo
+        } else {
+            stream.print(F("info not valid"));
+        }
+
+    }
+
     stream.println();
 }
 #endif
