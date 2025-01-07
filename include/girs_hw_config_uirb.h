@@ -18,3 +18,7 @@
 #if IR_RECEIVE_PIN_PULLUP
     #define IRRECEIVER_1_PULLUP
 #endif
+
+#if IR_CAPTURE_PIN_PULLUP
+    #define IRSENSOR_1_PULLUP
+#endif
