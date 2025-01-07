@@ -978,8 +978,6 @@ void loop() {
     readProcessOneCommand(stream);
 #endif // ! ETHERNET
 
-
-
 #ifdef RESET
     if (reset) {
         GirsUtils::reset();
