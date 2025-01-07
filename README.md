@@ -1,6 +1,6 @@
-# GirsUIRB 
-**(Based on [AGirs](https://github.com/bengtmartensson/AGirs))**  
-[![Linktree](https://img.shields.io/badge/LinkTree-1de9b6?logo=linktree&logoColor=white)](https://linktr.ee/djordjemandic)
+# GirsUIRB **(Based on [AGirs](https://github.com/bengtmartensson/AGirs))** | [![Linktree](https://img.shields.io/badge/LinkTree-1de9b6?logo=linktree&logoColor=white)](https://linktr.ee/djordjemandic)
+
+
 
 **GirsUIRB** is an infrared server for Arduino, specifically adapted for the [Universal IR Blaster (UIRB) V0.2 board](https://github.com/DjordjeMandic/UIRBpio). It incorporates several enhancements and additional features to **enable integration with [UIRBcorelib](https://github.com/DjordjeMandic/UIRBcorelib)**, bringing extended capabilities for IR signal processing and hardware control. It remains compatible with tools like [IrScrutinizer](https://github.com/bengtmartensson/IrScrutinizer) and [LIRC](https://www.lirc.org/).
 
