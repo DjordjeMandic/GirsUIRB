@@ -1,5 +1,6 @@
 /*
 Copyright (C) 2014,2015,2017 Bengt Martensson.
+Copyright (C) 2024,2025 Djordje Mandic.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,7 +23,14 @@ this program. If not, see http://www.gnu.org/licenses/.
 #include "GirsLib/StreamParser.h"
 #include <avr/pgmspace.h>
 #include <avr/wdt.h>
-#include <EEPROM.h>
+#include <Wire.h>
+#include <InfraredTypes.h>
+#if __has_include(<UIRBcore.hpp>)
+#include <UIRBcore.hpp>
+// Will hang and reboot if HW_VER does not match
+uirbcore::UIRB& uirb = uirbcore::UIRB::getInstance();
+#endif
+
 
 // Conditional includes
 #ifdef ETHERNET
@@ -151,9 +159,26 @@ bool reset = false;
 #undef VERSION
 #endif // VERSION
 #include "GirsLib/version.h"
+#include <GirsUIRB_Version.h>
 #define okString "OK"
 #define errorString "ERROR"
 #define timeoutString "."
+
+#if defined(UIRB_CORE_LIB)
+#define PROGNAME_WITH_LIB_VERSION PROGNAME " " GIRS_UIRB_VER " (GirsLib " VERSION " ; UIRBcore " UIRB_CORE_LIB_VER_STR ")"
+
+#if !defined(LOW_BAT_NOTIFY_PERIOD_SECONDS)
+#define LOW_BAT_NOTIFY_PERIOD_SECONDS 15
+#endif
+
+static constexpr uint8_t lowBatNotifyPeriodSeconds = LOW_BAT_NOTIFY_PERIOD_SECONDS;
+unsigned long lastLowBatCheckMillis = 0;
+
+#else
+
+#define PROGNAME_WITH_LIB_VERSION PROGNAME " " GIRS_UIRB_VER " (GirsLib " VERSION ")"
+
+#endif
 
 /**
  * Allocated length (-1) for commands etc.
@@ -346,11 +371,6 @@ static void dumpRemote(Stream& stream, const char* name) {
 #endif
 
 void setup() {
-    double HardwareVersion = 0.0;
-    EEPROM.get(INFO_HARDWARE_VERSION_ADDR, HardwareVersion);
-    //if hardware version defined in software does not match hardware version stored in eeprom then do a WDT reset
-    if(HardwareVersion != HARDWARE_VERSION_CMP) { wdt_enable(WDTO_2S); while(1); } // if hardware version does not match restart to prevent damage to hardware
-    
     LedLcdManager::setupLedGroundPins();
     GirsUtils::setupReceivers();
     GirsUtils::setupSensors();
@@ -363,7 +383,11 @@ void setup() {
     LedLcdManager::setup(LCD_I2C_ADDRESS, LCD_WIDTH, LCD_HEIGHT,
             (const pin_t[]) {SIGNAL_LED_1, SIGNAL_LED_2, SIGNAL_LED_3, SIGNAL_LED_4,
                     SIGNAL_LED_5, SIGNAL_LED_6, SIGNAL_LED_7, SIGNAL_LED_8 });
-    LedLcdManager::selfTest(F(PROGNAME "\n" VERSION));
+#if defined(UIRB_CORE_LIB)
+    LedLcdManager::selfTest(F(PROGNAME " " GIRS_UIRB_VER "\nG:" VERSION " - U:" UIRB_CORE_LIB_VER_STR));
+#else
+    LedLcdManager::selfTest(F(PROGNAME " " GIRS_UIRB_VER "\nGirsLib: " VERSION));
+#endif
 #pragma GCC diagnostic pop
 #ifdef LED
     LedLcdManager::setupShouldTimeout(transmitled, false);
@@ -412,37 +436,37 @@ void setup() {
 
 #if ! defined(ETHERNET) | defined(SERIAL_DEBUG)
     // Use options switch to select baudrate
-    pinMode(SERIAL_9600BAUD_SEL_PIN, INPUT_PULLUP);
-    pinMode(SERIAL_19200BAUD_SEL_PIN, INPUT_PULLUP);
-    pinMode(SERIAL_250000BAUD_SEL_PIN, INPUT_PULLUP);
-
     unsigned long selectedBaud = SERIALBAUD;
 
-    Serial.begin(SERIALBAUD);
+    Serial.begin(selectedBaud);
 
-    while (!Serial)
-        ; // wait for serial port to connect. "Needed for Leonardo only"
+    // while (!Serial)
+    //     ; // wait for serial port to connect. "Needed for Leonardo only"
 
+#if defined(UIRB_CORE_LIB)
     // Use options switch to select baudrate        
-    if (digitalRead(SERIAL_9600BAUD_SEL_PIN) == SERIAL_9600BAUD_SEL_PIN_ACTIVE) 
-    {
-        selectedBaud = 9600;
+    const uint8_t buttonPins[] = {PIN_BUTTON_OPTION_1, PIN_BUTTON_OPTION_2, PIN_BUTTON_OPTION_3};
+    const unsigned long baudOptions[] = {OPTION_1_BAUD, OPTION_2_BAUD, OPTION_3_BAUD};
+
+    for (uint8_t i = 0; i < 3; i++) {
+        if (digitalRead(buttonPins[i]) == BUTTON_PIN_ACTIVE_STATE) {
+            selectedBaud = baudOptions[i];
+            break;
+        }
     }
-    else if (digitalRead(SERIAL_19200BAUD_SEL_PIN) == SERIAL_19200BAUD_SEL_PIN_ACTIVE) 
-    {   
-        selectedBaud = 19200;
-    }
-    else if (digitalRead(SERIAL_250000BAUD_SEL_PIN) == SERIAL_250000BAUD_SEL_PIN_ACTIVE) 
-    {
-        selectedBaud = 250000;
-    }
+#endif
+    // Print selected baud rate
     Serial.print(F("BAUD:"));
     Serial.print(selectedBaud, DEC);
     Serial.println(F(":END"));
     Serial.flush();
     Serial.begin(selectedBaud);
 
-    Serial.println(F(PROGNAME " " VERSION));
+    Serial.println(F(PROGNAME_WITH_LIB_VERSION));
+#if defined(UIRB_CORE_LIB)
+    if (!uirb.begin())
+        Serial.println(F("UIRBcore init fail!"));
+#endif
     Serial.setTimeout(SERIALTIMEOUT);
 
 #ifdef ETHERNET
@@ -464,13 +488,108 @@ void info(Stream& stream) {
     stream.print(F("Arduino Leonardo"));
 #elif defined(ARDUINO_AVR_UNO)
     stream.print(F("Arduino Uno"));
-#elif defined(UIRB_V02)
+#elif defined(UIRB_BOARD_V02)
     stream.print(F("Universal IR Blaster V0.2"));
 #else
     stream.print(F("Unknown"));
 #endif
 
     stream.print(F(", CPU frequency: "  EXPAND_AND_QUOTE(F_CPU)));
+
+#if defined(UIRB_CORE_LIB)
+    if (uirb.begin() == uirbcore::CoreResult::SUCCESS) {
+        stream.print(F(", Serial: '"));
+        stream.print(uirb.getUSBSerialNumber());
+        stream.print(F("', Boot count: "));
+        stream.print(uirb.getBootCount());
+        stream.print(F(", Reference: "));
+        stream.print(uirb.getInternalBandgapReferenceVoltageMilivolts());
+        stream.print(F("mV, Power: "));
+        uirbcore::PowerInfoData& powerInfo = uirb.getPowerInfo();
+
+        if (powerInfo.isValid()) { 
+            stream.print(F("Vcc="));
+            stream.print(powerInfo.getSupplyVoltage(), 3);
+            stream.print(F("V ; "));
+
+            stream.print(F("Ichg="));
+            stream.print(powerInfo.getChargingCurrent(), 3);
+            stream.print(F("A ; "));
+            
+            stream.print(F("Vprog="));
+            stream.print(powerInfo.getProgVoltage(), 3);
+            stream.print(F("V ; "));
+            
+            stream.print(F("ChargerState=["));
+            switch (powerInfo.getChargerState()) {
+                case uirbcore::ChargerState::UNKNOWN:
+                    stream.print(F("unknown"));
+                    break;
+                case uirbcore::ChargerState::CHARGING_CC:
+                    stream.print(F("charging cc"));
+                    break;
+                case uirbcore::ChargerState::CHARGING_CV:
+                    stream.print(F("charging cv"));
+                    break;
+                case uirbcore::ChargerState::FLOATING:
+                    stream.print(F("idle floating"));
+                    break;
+                case uirbcore::ChargerState::TURNED_OFF:
+                    stream.print(F("off"));
+                    break;
+                case uirbcore::ChargerState::ERROR:
+                    stream.print(F("internal error"));
+                    break;
+                default:
+                    stream.print(F("error"));
+                    break;
+            }
+
+            stream.print(F("] ; BatteryState=["));
+            switch (powerInfo.getBatteryState()) {
+                case uirbcore::BatteryState::UNKNOWN:
+                    stream.print(F("unknown"));
+                    break;
+                case uirbcore::BatteryState::CHARGING:
+                    stream.print(F("charging"));
+                    break;
+                case uirbcore::BatteryState::FULLY_CHARGED:
+                    stream.print(F("full"));
+                    break;
+                case uirbcore::BatteryState::EMPTY:
+                    stream.print(F("empty"));
+                    break;
+                case uirbcore::BatteryState::NOT_CHARGING:
+                    stream.print(F("not charging"));
+                    break;
+                case uirbcore::BatteryState::ERROR:
+                    stream.print(F("internal error"));
+                    break;
+                default:
+                    stream.print(F("error"));
+                    break;
+            }
+            stream.print(F("]"));
+        } else {
+            stream.print(F("info not valid"));
+        }
+    } else {
+        stream.print(F(", UIRBcore init failed: "));
+        switch(uirb.begin()) {
+            case uirbcore::CoreResult::ERROR_EEPROM_HW_VER_MISMATCH:
+                stream.print(F("HW_VER mismatch"));
+                break;
+            case uirbcore::CoreResult::ERROR_EEPROM_CHARGER_PROG_RESISTANCE_INVALID:
+                stream.print(F("Rprog invalid"));
+                break;
+            case uirbcore::CoreResult::ERROR_EEPROM_SAVE_FAILED:
+                stream.print(F("EEPROM save failed"));
+                break;
+            default:
+                stream.print(F("unknown error"));
+        }
+    }
+#endif  // defined(UIRB_CORE_LIB)
 
     stream.println();
 }
@@ -761,7 +880,7 @@ static bool processCommand(const char* cmd, StreamParser& parser) {
 #endif // RENDERER
 
         if (cmd[0] == 'v') { // version
-        stream.println(F(PROGNAME " " VERSION));
+        stream.println(F(PROGNAME_WITH_LIB_VERSION));
     } else {
         stream.println(F(errorString));
     }
@@ -863,6 +982,16 @@ void loop() {
     if (reset) {
         GirsUtils::reset();
         reset = false; // In case it does not work, do not keep trying
+    }
+#endif
+
+#if defined(UIRB_CORE_LIB)
+    unsigned long currentMillis = millis();
+    if (currentMillis - lastLowBatCheckMillis >= lowBatNotifyPeriodSeconds) {
+        lastLowBatCheckMillis = currentMillis;
+
+        // Do two samples, flash low bat led if needed.
+        uirb.getPowerInfo(2, true);
     }
 #endif
 }

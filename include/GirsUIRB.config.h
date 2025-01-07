@@ -1,6 +1,6 @@
 /**
- * @file GirsLite.config.h
- * @brief Configuration optimized for IrScrutinizer and Lirc.
+ * @file GirsUIRB.config.h
+ * @brief Configuration optimized for IrScrutinizer and Lirc using Universal IR Blaster.
  */
 
 #pragma once
@@ -220,7 +220,9 @@
 /**
  * Configured speed of the serial port.
  */
+#if !defined(SERIALBAUD)
 #define SERIALBAUD 38400
+#endif
 
 /**
  * Timeout for serial line.

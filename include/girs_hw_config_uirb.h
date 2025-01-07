@@ -1,19 +1,26 @@
 #pragma once
 
-/*  
- *  Same signal is used for both non-demodulating and demodulating sensors!
- *  When using expansion board with non-demodulating sensor, use CAPTURE module
- *  When using expansion board with demodulating sensor, use RECEIVE module
- *
-*/
+#if __has_include(<UIRBcore_Pins.h>)
+#include <UIRBcore_Pins.h>
+#define SIGNAL_LED_1        PIN_STAT_LED
 
-#define SIGNAL_LED_1        PIN_PB5 // STAT LED
+#define IRSENSOR_1_PIN      PIN_IR_CAPTURE
 
-#define IRSENSOR_1_PIN      PIN_PB0 // PB0 (ICP1) PIN, Capture signal, connected with PB4 (MISO) via 10k resistor. Comes from  Non-demodulating sensor
+#define IRRECEIVER_1_PIN    PIN_IR_RECEIVE
+#else
+#define SIGNAL_LED_1        LED_BUILTIN
 
-#define IRRECEIVER_1_PIN    PIN_PB4 // PB4 (MISO) PIN, direct signal from expansion board
-#define IRRECEIVER_1_PULLUP         // Enable pull up in case no expansion board is connected
+#define IRSENSOR_1_PIN      (8)
 
-//#define IRRECEIVER_2_PIN IRSENSOR_1_PIN // Non-demodulating sensor signal
+#define IRRECEIVER_1_PIN    PIN_SPI_MISO
 
+#define IRRECEIVER_1_PULLUP
+#endif  // __has_include(<UIRBcore_Pins.h>)
 
+#if IR_RECEIVE_PIN_PULLUP
+    #define IRRECEIVER_1_PULLUP
+#endif
+
+#if IR_CAPTURE_PIN_PULLUP
+    #define IRSENSOR_1_PULLUP
+#endif
