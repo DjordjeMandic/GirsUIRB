@@ -13,6 +13,8 @@
 #define IRSENSOR_1_PIN      (8)
 
 #define IRRECEIVER_1_PIN    PIN_SPI_MISO
+
+#define IRRECEIVER_1_PULLUP
 #endif  // __has_include(<UIRBcore_Pins.h>)
 
 #if IR_RECEIVE_PIN_PULLUP
