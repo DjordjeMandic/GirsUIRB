@@ -25,10 +25,12 @@ this program. If not, see http://www.gnu.org/licenses/.
 #include <avr/wdt.h>
 #include <Wire.h>
 #include <InfraredTypes.h>
+#if __has_include(<UIRBcore.hpp>)
 #include <UIRBcore.hpp>
-
 // Will hang and reboot if HW_VER does not match
 uirbcore::UIRB& uirb = uirbcore::UIRB::getInstance();
+#endif
+
 
 // Conditional includes
 #ifdef ETHERNET
@@ -171,6 +173,10 @@ bool reset = false;
 
 static constexpr uint8_t lowBatNotifyPeriodSeconds = LOW_BAT_NOTIFY_PERIOD_SECONDS;
 unsigned long lastLowBatCheckMillis = 0;
+
+#else
+
+#define PROGNAME_WITH_LIB_VERSION PROGNAME " " GIRS_UIRB_VER " (GirsLib " VERSION ")"
 
 #endif
 
@@ -377,7 +383,11 @@ void setup() {
     LedLcdManager::setup(LCD_I2C_ADDRESS, LCD_WIDTH, LCD_HEIGHT,
             (const pin_t[]) {SIGNAL_LED_1, SIGNAL_LED_2, SIGNAL_LED_3, SIGNAL_LED_4,
                     SIGNAL_LED_5, SIGNAL_LED_6, SIGNAL_LED_7, SIGNAL_LED_8 });
+#if defined(UIRB_CORE_LIB)
     LedLcdManager::selfTest(F(PROGNAME " " GIRS_UIRB_VER "\nG:" VERSION " - U:" UIRB_CORE_LIB_VER_STR));
+#else
+    LedLcdManager::selfTest(F(PROGNAME " " GIRS_UIRB_VER "\nGirsLib: " VERSION));
+#endif
 #pragma GCC diagnostic pop
 #ifdef LED
     LedLcdManager::setupShouldTimeout(transmitled, false);
@@ -433,6 +443,7 @@ void setup() {
     // while (!Serial)
     //     ; // wait for serial port to connect. "Needed for Leonardo only"
 
+#if defined(UIRB_CORE_LIB)
     // Use options switch to select baudrate        
     const uint8_t buttonPins[] = {PIN_BUTTON_OPTION_1, PIN_BUTTON_OPTION_2, PIN_BUTTON_OPTION_3};
     const unsigned long baudOptions[] = {OPTION_1_BAUD, OPTION_2_BAUD, OPTION_3_BAUD};
@@ -443,6 +454,7 @@ void setup() {
             break;
         }
     }
+#endif
     // Print selected baud rate
     Serial.print(F("BAUD:"));
     Serial.print(selectedBaud, DEC);
@@ -451,8 +463,10 @@ void setup() {
     Serial.begin(selectedBaud);
 
     Serial.println(F(PROGNAME_WITH_LIB_VERSION));
+#if defined(UIRB_CORE_LIB)
     if (!uirb.begin())
         Serial.println(F("UIRBcore init fail!"));
+#endif
     Serial.setTimeout(SERIALTIMEOUT);
 
 #ifdef ETHERNET

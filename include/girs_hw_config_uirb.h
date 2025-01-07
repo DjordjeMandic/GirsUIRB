@@ -1,19 +1,19 @@
 #pragma once
 
+#if __has_include(<UIRBcore_Pins.h>)
 #include <UIRBcore_Pins.h>
-
-/*  
- *  Same signal is used for both non-demodulating and demodulating sensors!
- *  When using expansion board with non-demodulating sensor, use CAPTURE module
- *  When using expansion board with demodulating sensor, use RECEIVE module
- *
- */
-
 #define SIGNAL_LED_1        PIN_STAT_LED
 
 #define IRSENSOR_1_PIN      PIN_IR_CAPTURE
 
 #define IRRECEIVER_1_PIN    PIN_IR_RECEIVE
+#else
+#define SIGNAL_LED_1        LED_BUILTIN
+
+#define IRSENSOR_1_PIN      (8)
+
+#define IRRECEIVER_1_PIN    PIN_SPI_MISO
+#endif  // __has_include(<UIRBcore_Pins.h>)
 
 #if IR_RECEIVE_PIN_PULLUP
     #define IRRECEIVER_1_PULLUP
