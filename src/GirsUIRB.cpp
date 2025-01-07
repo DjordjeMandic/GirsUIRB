@@ -161,7 +161,17 @@ bool reset = false;
 #define errorString "ERROR"
 #define timeoutString "."
 
+#if defined(UIRB_CORE_LIB)
 #define PROGNAME_WITH_LIB_VERSION PROGNAME " " VERSION " (UIRBcore " UIRB_CORE_LIB_VER_STR ")"
+
+#if !defined(LOW_BAT_NOTIFY_PERIOD_SECONDS)
+#define LOW_BAT_NOTIFY_PERIOD_SECONDS 15
+#endif
+
+static constexpr uint8_t lowBatNotifyPeriodSeconds = LOW_BAT_NOTIFY_PERIOD_SECONDS;
+unsigned long lastLowBatCheckMillis = 0;
+
+#endif
 
 /**
  * Allocated length (-1) for commands etc.
@@ -953,10 +963,22 @@ void loop() {
     readProcessOneCommand(stream);
 #endif // ! ETHERNET
 
+
+
 #ifdef RESET
     if (reset) {
         GirsUtils::reset();
         reset = false; // In case it does not work, do not keep trying
+    }
+#endif
+
+#if defined(UIRB_CORE_LIB)
+    unsigned long currentMillis = millis();
+    if (currentMillis - lastLowBatCheckMillis >= lowBatNotifyPeriodSeconds) {
+        lastLowBatCheckMillis = currentMillis;
+
+        // Do two samples, flash low bat led if needed.
+        uirb.getPowerInfo(2, true);
     }
 #endif
 }
