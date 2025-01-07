@@ -27,6 +27,7 @@ this program. If not, see http://www.gnu.org/licenses/.
 #include <InfraredTypes.h>
 #include <UIRBcore.hpp>
 
+// Will hang and reboot if HW_VER does not match
 uirbcore::UIRB& uirb = uirbcore::UIRB::getInstance();
 
 // Conditional includes
@@ -353,13 +354,6 @@ static void dumpRemote(Stream& stream, const char* name) {
 #endif
 
 void setup() {
-    /*
-    double HardwareVersion = 0.0;
-    EEPROM.get(INFO_HARDWARE_VERSION_ADDR, HardwareVersion);
-    //if hardware version defined in software does not match hardware version stored in eeprom then do a WDT reset
-    if(HardwareVersion != HARDWARE_VERSION_CMP) { wdt_enable(WDTO_2S); while(1); } // if hardware version does not match restart to prevent damage to hardware
-    
-    */
     LedLcdManager::setupLedGroundPins();
     GirsUtils::setupReceivers();
     GirsUtils::setupSensors();
@@ -372,7 +366,7 @@ void setup() {
     LedLcdManager::setup(LCD_I2C_ADDRESS, LCD_WIDTH, LCD_HEIGHT,
             (const pin_t[]) {SIGNAL_LED_1, SIGNAL_LED_2, SIGNAL_LED_3, SIGNAL_LED_4,
                     SIGNAL_LED_5, SIGNAL_LED_6, SIGNAL_LED_7, SIGNAL_LED_8 });
-    LedLcdManager::selfTest(F(PROGNAME "\n" VERSION));
+    LedLcdManager::selfTest(F(PROGNAME " " VERSION "\nUIRBcore " UIRB_CORE_LIB_VER_STR));
 #pragma GCC diagnostic pop
 #ifdef LED
     LedLcdManager::setupShouldTimeout(transmitled, false);
