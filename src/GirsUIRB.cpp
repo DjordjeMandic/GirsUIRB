@@ -163,7 +163,7 @@ bool reset = false;
 #define timeoutString "."
 
 #if defined(UIRB_CORE_LIB)
-#define PROGNAME_WITH_LIB_VERSION PROGNAME " " GIRS_UIRB_VER "(GirsLib: " VERSION " ; UIRBcore: " UIRB_CORE_LIB_VER_STR ")"
+#define PROGNAME_WITH_LIB_VERSION PROGNAME " " GIRS_UIRB_VER " (GirsLib " VERSION " ; UIRBcore " UIRB_CORE_LIB_VER_STR ")"
 
 #if !defined(LOW_BAT_NOTIFY_PERIOD_SECONDS)
 #define LOW_BAT_NOTIFY_PERIOD_SECONDS 15
