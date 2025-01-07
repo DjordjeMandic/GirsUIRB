@@ -477,6 +477,7 @@ void info(Stream& stream) {
 
     stream.print(F(", CPU frequency: "  EXPAND_AND_QUOTE(F_CPU)));
 
+#if defined(UIRB_CORE_LIB)
     if (uirb.begin() == uirbcore::CoreResult::SUCCESS) {
         stream.print(F(", Serial: '"));
         stream.print(uirb.getUSBSerialNumber());
@@ -486,44 +487,90 @@ void info(Stream& stream) {
         stream.print(uirb.getInternalBandgapReferenceVoltageMilivolts());
         stream.print(F("mV, Power: "));
         uirbcore::PowerInfoData& powerInfo = uirb.getPowerInfo();
+
         if (powerInfo.isValid()) { 
             stream.print(F("Vcc="));
             stream.print(powerInfo.getSupplyVoltage(), 3);
             stream.print(F("V ; "));
+
             stream.print(F("Ichg="));
             stream.print(powerInfo.getChargingCurrent(), 3);
             stream.print(F("A ; "));
+            
             stream.print(F("Vprog="));
             stream.print(powerInfo.getProgVoltage(), 3);
             stream.print(F("V ; "));
-            stream.print(F("Chg["));
+            
+            stream.print(F("ChargerState=["));
             switch (powerInfo.getChargerState()) {
                 case uirbcore::ChargerState::UNKNOWN:
                     stream.print(F("unknown"));
                     break;
                 case uirbcore::ChargerState::CHARGING_CC:
-                    stream.print(F("CC"));
+                    stream.print(F("charging cc"));
                     break;
                 case uirbcore::ChargerState::CHARGING_CV:
-                    stream.print(F("CV"));
+                    stream.print(F("charging cv"));
                     break;
                 case uirbcore::ChargerState::FLOATING:
-                    stream.print(F("float"));
+                    stream.print(F("idle floating"));
                     break;
                 case uirbcore::ChargerState::TURNED_OFF:
                     stream.print(F("off"));
+                    break;
+                case uirbcore::ChargerState::ERROR:
+                    stream.print(F("internal error"));
                     break;
                 default:
                     stream.print(F("error"));
                     break;
             }
-            stream.print(F("] "));
-            #todo
+
+            stream.print(F("] ; BatteryState=["));
+            switch (powerInfo.getBatteryState()) {
+                case uirbcore::BatteryState::UNKNOWN:
+                    stream.print(F("unknown"));
+                    break;
+                case uirbcore::BatteryState::CHARGING:
+                    stream.print(F("charging"));
+                    break;
+                case uirbcore::BatteryState::FULLY_CHARGED:
+                    stream.print(F("full"));
+                    break;
+                case uirbcore::BatteryState::EMPTY:
+                    stream.print(F("empty"));
+                    break;
+                case uirbcore::BatteryState::NOT_CHARGING:
+                    stream.print(F("not charging"));
+                    break;
+                case uirbcore::BatteryState::ERROR:
+                    stream.print(F("internal error"));
+                    break;
+                default:
+                    stream.print(F("error"));
+                    break;
+            }
+            stream.print(F("]"));
         } else {
             stream.print(F("info not valid"));
         }
-
+    } else {
+        stream.print(F(", UIRBcore init failed: "));
+        switch(uirb.begin()) {
+            case uirbcore::CoreResult::ERROR_EEPROM_HW_VER_MISMATCH:
+                stream.print(F("HW_VER mismatch"));
+                break;
+            case uirbcore::CoreResult::ERROR_EEPROM_CHARGER_PROG_RESISTANCE_INVALID:
+                stream.print(F("Rprog invalid"));
+                break;
+            case uirbcore::CoreResult::ERROR_EEPROM_SAVE_FAILED:
+                stream.print(F("EEPROM save failed"));
+                break;
+            default:
+                stream.print(F("unknown error"));
+        }
     }
+#endif  // defined(UIRB_CORE_LIB)
 
     stream.println();
 }
