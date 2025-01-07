@@ -157,12 +157,13 @@ bool reset = false;
 #undef VERSION
 #endif // VERSION
 #include "GirsLib/version.h"
+#include <GirsUIRB_Version.h>
 #define okString "OK"
 #define errorString "ERROR"
 #define timeoutString "."
 
 #if defined(UIRB_CORE_LIB)
-#define PROGNAME_WITH_LIB_VERSION PROGNAME " " VERSION " (UIRBcore " UIRB_CORE_LIB_VER_STR ")"
+#define PROGNAME_WITH_LIB_VERSION PROGNAME " " GIRS_UIRB_VER "(GirsLib: " VERSION " ; UIRBcore: " UIRB_CORE_LIB_VER_STR ")"
 
 #if !defined(LOW_BAT_NOTIFY_PERIOD_SECONDS)
 #define LOW_BAT_NOTIFY_PERIOD_SECONDS 15
@@ -376,7 +377,7 @@ void setup() {
     LedLcdManager::setup(LCD_I2C_ADDRESS, LCD_WIDTH, LCD_HEIGHT,
             (const pin_t[]) {SIGNAL_LED_1, SIGNAL_LED_2, SIGNAL_LED_3, SIGNAL_LED_4,
                     SIGNAL_LED_5, SIGNAL_LED_6, SIGNAL_LED_7, SIGNAL_LED_8 });
-    LedLcdManager::selfTest(F(PROGNAME " " VERSION "\nUIRBcore " UIRB_CORE_LIB_VER_STR));
+    LedLcdManager::selfTest(F(PROGNAME " " GIRS_UIRB_VER "\nG:" VERSION " - U:" UIRB_CORE_LIB_VER_STR));
 #pragma GCC diagnostic pop
 #ifdef LED
     LedLcdManager::setupShouldTimeout(transmitled, false);
