@@ -200,7 +200,7 @@
  * Size of capture and receive arrays.
  */
 #if __has_include(<UIRBcore.hpp>)
-#define DEFAULT_CAPTURESIZE 390U // must be even and less than 394
+#define DEFAULT_CAPTURESIZE 380U // must be even
 #else
 #define DEFAULT_CAPTURESIZE 400U // must be even
 #endif
